@@ -1,0 +1,23 @@
+{
+    "name": "Tatsu",
+    "description": "Game Engine for WebGL enabled browsers",
+    "version": "0.0.1",
+    "homepage": "http://tatsujs.com",
+    "author": {
+        "name": "Matt Rudder",
+        "url": "http://mattrudder.com/"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/mattrudder/Tatsu.git"
+    },
+    "bugs": {
+        "url": "https://github.com/mattrudder/Tatsu/issues"
+    },
+    "licenses": [
+        {
+            "type": "MIT",
+            "url": "https://github.com/mattrudder/Tatsu/blob/master/LICENSE-MIT"
+        }
+    ]
+}
