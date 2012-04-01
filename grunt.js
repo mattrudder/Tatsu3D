@@ -52,6 +52,8 @@ module.exports = function(grunt) {
             globals: {
                 console: true,
                 Tatsu: true,
+                $: true,
+                jQuery: true
             }
         },
         uglify: {}

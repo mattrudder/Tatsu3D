@@ -5,7 +5,8 @@ Tatsu.Material = function(ctx, options) {
         _program,
         _attributes = {},
         _uniforms = {},
-        _options = options || {};
+        _options = options || {},
+        _isLinked = false;
 
     function createShader(_gl, script, type) {
         var shader = _gl.createShader(type);
@@ -13,7 +14,7 @@ Tatsu.Material = function(ctx, options) {
         _gl.compileShader(shader);
             
         if (!_gl.getShaderParameter(shader, _gl.COMPILE_STATUS)) {
-            console.log(_gl.getShaderInfoLog(shader));
+            console.error(_gl.getShaderInfoLog(shader));
             return null;
         }
 
@@ -38,26 +39,45 @@ Tatsu.Material = function(ctx, options) {
         }
     }
 
+    function tryLink() {
+        _gl.linkProgram(_program);
+
+        if (!_gl.getProgramParameter(_program, _gl.LINK_STATUS)) {
+            return;
+        }
+
+        // cache attribute and uniform locations.
+        _isLinked = true;
+        lookupAttributes.apply(this, [_options.attributes]);
+        lookupUniforms.apply(this, [_options.uniforms]);
+    }
     
+    function addShader(src, type) {
+        _gl.attachShader(_program, createShader(_gl, src, type));
+        tryLink();
+    }
+
     // object construction
     _program = _gl.createProgram();
     if (options.vertex) {
-        _gl.attachShader(_program, createShader(_gl, options.vertex, _gl.VERTEX_SHADER));
+        addShader(options.vertex, _gl.VERTEX_SHADER);
     }
+    else if (options.vertexUrl) {
+        $.get(options.vertexUrl, function (data, status, xhr) {
+            addShader.apply(this, [xhr.responseText, _gl.VERTEX_SHADER]);
+        });
+    }
+
     if (options.fragment) {
-        _gl.attachShader(_program, createShader(_gl, options.fragment, _gl.FRAGMENT_SHADER));
+        addShader(options.fragment, _gl.FRAGMENT_SHADER);
+    }
+    else if (options.fragmentUrl) {
+        $.get(options.fragmentUrl, function (data, status, xhr) {
+            addShader.apply(this, [xhr.responseText, _gl.FRAGMENT_SHADER]);
+        });
     }
 
-    _gl.linkProgram(_program);
-    
-    if (!_gl.getProgramParameter(_program, _gl.LINK_STATUS)) {
-        console.error("Error creating material: \n" + "validation: " + _gl.getProgramParameter(_program, _gl.VALIDATE_STATUS) + ", error [" + _gl.getError() + "]");
-        return;
-    }
-
-    // cache attribute and uniform locations.
-    lookupAttributes(options._attributes);
-    lookupUniforms(options._uniforms);
+    tryLink.apply(this);
     
     this.context = ctx;
     this.program = _program;

@@ -7,32 +7,13 @@
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
         <script src="../../lib/glMatrix-0.9.5.min.js"></script>
         <script src="../../src/Tatsu.js"></script>
+        <script src="../../src/Graphics/Types.js"></script>
         <script src="../../src/Graphics/Renderer.js"></script>
         <script src="../../src/Graphics/Material.js"></script>
-        
-        <script id="shader-fs" type="x-shader/x-fragment"> 
-            #ifdef GL_ES
-            precision highp float;
-            #endif
-
-            void main(void) {
-                gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-            }
-        </script> 
-
-        <script id="shader-vs" type="x-shader/x-vertex"> 
-            attribute vec3 position;
-
-            uniform mat4 matModelView;
-            uniform mat4 matProj;
-
-            void main(void) {
-                gl_Position = matProj * matModelView * vec4(position, 1.0);
-            }
-        </script>
+        <script src="../../src/Graphics/Model.js"></script>
         
         <script type="text/javascript">
-            var tatsu, material,
+            var tatsu, material, model,
                 attributes = {
                     position: {
                         type: 'v3',
@@ -52,8 +33,6 @@
 
             function draw() {
                 tatsu.clear();
-
-
             }
 
             function doFrame() {
@@ -62,22 +41,62 @@
             }
 
             function tatsuLoad() {
+                var fragShader, vertShader;
+                var foo = $.get('sandbox.fs', function(data) {
+                    fragShader = data;
+                });
+                $.get('sandbox.vs', function(data) {
+                    vertShader = data;
+                });
+
                 tatsu = new Tatsu.Renderer({
                     element: 'tatsu-canvas',
-                    clearColor: [0.392156862745098, 0.5843137254901961, 0.9294117647058824]
+                    clearColor: [0.392156862745098, 0.5843137254901961, 0.9294117647058824, 1.0]
                 });
                 material = new Tatsu.Material(tatsu, {
-                    fragment: $('shader-fs').html(),
-                    vertex: $('shader-vs').html(),
+                    fragmentUrl: 'sandbox.fs',
+                    vertexUrl: 'sandbox.vs',
                     attributes: attributes,
                     uniforms: uniforms
                 });
+                modelTri = new Tatsu.Model(tatsu, {
+                    streams: {
+                        position: {
+                            type: 'float',
+                            stride: 3,
+                            data: [
+                                 0.0,  1.0,  0.0,
+                                -1.0, -1.0,  0.0,
+                                 1.0, -1.0,  0.0
+                            ]
+                        }
+                    }
+                    // faces: {
+                    //     type: 'uint16',
+                    //     data: []
+                    // }
+                });
+                modelSquare = new Tatsu.Model(tatsu, {
+                    streams: {
+                        position: {
+                            type: 'float',
+                            stride: 3,
+                            data: [
+                                 1.0,  1.0,  0.0,
+                                -1.0,  1.0,  0.0,
+                                 1.0, -1.0,  0.0,
+                                -1.0, -1.0,  0.0
+                            ]
+                        }
+                    }
+                });
+
 
                 doFrame();
             }
         </script>
     </head>
     <body onload="tatsuLoad();">
-        <canvas id="tatsu-canvas" style="border: none;" width="1440" height="672"></canvas>
+        <canvas id="tatsu-canvas" style="border: none;" width="800" height="600"></canvas>
     </body>
 </html>
