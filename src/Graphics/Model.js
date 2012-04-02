@@ -4,6 +4,53 @@ Tatsu.Model = function(ctx, options) {
         _self = this,
         _options = options || {};
 
+    this.streamNames = [];
+    this.streamBuffers = [];
+    this.streamBufferOffsets = {};
+    this.streamBufferStrides = {};
+    this.streamBufferTypes = {};
+    this.vertexBuffer = null;
+    this.indexBuffer = null;
+    this.indexStreamBuffer = null;
+    this.indexStreamType = null;
+    this.vertexCount = 0;
+    this.indexCount = 0;
+
+    this.bind = function(material) {
+        var attributes = material.attributeLocations,
+            attribute = null,
+            streamName = null,
+            streamOffset = 0,
+            streamStride = 0,
+            streamType = 0;
+
+        _gl.bindBuffer(_gl.ARRAY_BUFFER, this.vertexBuffer);
+
+        for (var i = 0; i < this.streamNames.length; i++) {
+            streamName = this.streamNames[i];
+            attribute = attributes[streamName];
+            streamOffset = this.streamBufferOffsets[streamName];
+            streamStride = this.streamBufferStrides[streamName];
+            streamType = this.streamBufferTypes[streamName];
+
+            _gl.vertexAttribPointer(attribute, streamStride, streamType, false, 0, streamOffset);
+            _gl.enableVertexAttribArray(attribute);
+        }
+
+        if (this.indexBuffer) {
+            _gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+        }
+    };
+
+    this.draw = function() {
+        if (this.indexBuffer === null) {
+            _gl.drawArrays(_gl.TRIANGLES, 0, this.vertexCount);
+        }
+        else {
+            _gl.drawElements(_gl.TRIANGLES, this.indexCount, this.indexStreamType, 0);
+        }
+    };
+
     function loadModel(source) {
         var i = 0,
             streamCount = 0,
@@ -22,6 +69,7 @@ Tatsu.Model = function(ctx, options) {
             this.streamBufferOffsets[streamName] = bufferSize;
             this.streamBufferStrides[streamName] = stream.stride;
             this.streamBufferTypes[streamName] = Tatsu.Types.toGLType(_gl, stream.type);
+            this.vertexCount = stream.data.length / stream.stride;            
 
             if (streamBuffer) {
                 bufferSize += streamBuffer.byteLength;
@@ -55,17 +103,6 @@ Tatsu.Model = function(ctx, options) {
             _gl.bufferData(_gl.ELEMENT_ARRAY_BUFFER, this.indexStreamBuffer, _gl.STATIC_DRAW);
         }
     }
-
-    this.streamNames = [];
-    this.streamBuffers = [];
-    this.streamBufferOffsets = [];
-    this.streamBufferStrides = [];
-    this.streamBufferTypes = [];
-    this.vertexBuffer = null;
-    this.indexBuffer = null;
-    this.indexStreamBuffer = null;
-    this.indexStreamType = null;
-    this.indexCount = 0;
 
     if (typeof _options.modelUrl === 'string') {
         $.get(_options.modelUrl, function (src) { loadModel.apply(_self, [src]); }, 'json');

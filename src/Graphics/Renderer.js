@@ -14,7 +14,16 @@ Tatsu.Renderer = function(options) {
         null;
 
     try {
-        _gl = _domElement.getContext("experimental-webgl");
+        _gl = _domElement.getContext('webgl') || _domElement.getContext('experimental-webgl');
+
+        // If webgl-debug.js is in use, wrap our context in that.
+        if (typeof WebGLDebugUtils === 'object' && typeof WebGLDebugUtils.makeDebugContext === 'function') {
+            _gl = WebGLDebugUtils.makeDebugContext(_gl);
+            // _gl = WebGLDebugUtils.makeDebugContext(_gl, function (err, funcName, args) {
+            //     console.error(WebGLDebugUtils.glEnumToString(err) + ' was caused by call to ' + funcName);
+            // });
+        }
+
         _width = _domElement.width;
         _height = _domElement.height;
 

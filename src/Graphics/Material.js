@@ -2,11 +2,37 @@
 Tatsu.Material = function(ctx, options) {
     // private members
     var _gl = ctx.gl(),
-        _program,
-        _attributes = {},
-        _uniforms = {},
+        _self = this,
         _options = options || {},
-        _isLinked = false;
+        _linked = false;
+
+    this.context = ctx;
+    this.program = _gl.createProgram();
+    this.attributes = [];
+    this.uniforms = [];
+    this.attributeTypes = {};
+    this.attributeLocations = {};
+    this.uniformTypes = {};
+    this.uniformLocations = {};
+
+    this.bind = function() {
+        if (_linked) {
+            _gl.useProgram(this.program);
+        }
+    };
+
+    this.bindUniform = function(name, value) {
+        var uniformType = this.uniformTypes[name];
+
+        switch (uniformType) {
+            case 'mat4':
+            {
+                _gl.uniformMatrix4fv(this.uniformLocations[name], _gl.FALSE, value);
+            }
+            break;
+            // TODO: Support texture types.
+        }
+    }
 
     function createShader(_gl, script, type) {
         var shader = _gl.createShader(type);
@@ -21,50 +47,83 @@ Tatsu.Material = function(ctx, options) {
         return shader;
     }
 
-    function lookupAttributes(list) {
-        var attr;
+    // Lookup attributes and uniforms in source by searching directly in the shader.
+    // http://altdevblogaday.com/2011/04/18/mike_acton-pokes-around-webgl-and-jquery/
+    function lookupAttributes(src) {
+        var attributeMatch = /attribute\s+(\w+)\s+(\w+)\s*;/g,
+            attributes = src.match(attributeMatch),
+            attribute = null,
+            attributeType = null,
+            attributeName = null;
 
-        for (var name in list) {
-            attr = list[name];
-            _attributes[name] = _gl.getAttribLocation(_program, name);
-        }
+        for (var i = attributes.length - 1; i >= 0; i--) {
+            attribute = attributes[i].split(attributeMatch);
+            attributeType = attribute[1];
+            attributeName = attribute[2];
+
+            this.attributes.push(attributeName);
+            this.attributeTypes[attributeName] = attributeType;
+        };
     }
 
-    function lookupUniforms(list) {
-        var uniform;
+    function lookupUniforms(src) {
+        var uniformMatch = /uniform\s+(\w+)\s+(\w+)\s*;/g,
+            uniforms = src.match(uniformMatch),
+            uniform = null,
+            uniformType = null,
+            uniformName = null;
 
-        for (var name in list) {
-            uniform = list[name];
-            _uniforms[name] = _gl.getUniformLocation(_program, name);
+        if (uniforms !== null) {
+            for (var i = uniforms.length - 1; i >= 0; i--) {
+                uniform = uniforms[i].split(uniformMatch);
+                uniformType = uniform[1];
+                uniformName = uniform[2];
+
+                this.uniforms.push(uniformName);
+                this.uniformTypes[uniformName] = uniformType;
+            };
         }
     }
 
     function tryLink() {
-        _gl.linkProgram(_program);
+        var name, item;
 
-        if (!_gl.getProgramParameter(_program, _gl.LINK_STATUS)) {
+        _gl.linkProgram(this.program);
+
+        if (!_gl.getProgramParameter(this.program, _gl.LINK_STATUS)) {
             return;
         }
 
-        // cache attribute and uniform locations.
-        _isLinked = true;
-        lookupAttributes.apply(this, [_options.attributes]);
-        lookupUniforms.apply(this, [_options.uniforms]);
+        _linked = true;
+
+        // Lookup uniform and attribute locations, now that linking has succeeded.
+        for (name in this.uniforms) {
+            item = this.uniforms[name];
+            this.uniformLocations[item] = _gl.getUniformLocation(this.program, item);
+        }
+        for (name in this.attributes) {
+            item = this.attributes[name];
+            this.attributeLocations[item] = _gl.getAttribLocation(this.program, item);
+        }
     }
     
     function addShader(src, type) {
-        _gl.attachShader(_program, createShader(_gl, src, type));
-        tryLink();
+        _gl.attachShader(this.program, createShader(_gl, src, type));
+        tryLink.apply(this);
+
+        lookupUniforms.apply(this, [src]);
+        if (type === _gl.VERTEX_SHADER) {
+            lookupAttributes.apply(this, [src]);
+        }
     }
 
     // object construction
-    _program = _gl.createProgram();
     if (options.vertex) {
         addShader(options.vertex, _gl.VERTEX_SHADER);
     }
     else if (options.vertexUrl) {
         $.get(options.vertexUrl, function (data, status, xhr) {
-            addShader.apply(this, [xhr.responseText, _gl.VERTEX_SHADER]);
+            addShader.apply(_self, [xhr.responseText, _gl.VERTEX_SHADER]);
         });
     }
 
@@ -73,14 +132,9 @@ Tatsu.Material = function(ctx, options) {
     }
     else if (options.fragmentUrl) {
         $.get(options.fragmentUrl, function (data, status, xhr) {
-            addShader.apply(this, [xhr.responseText, _gl.FRAGMENT_SHADER]);
+            addShader.apply(_self, [xhr.responseText, _gl.FRAGMENT_SHADER]);
         });
     }
 
     tryLink.apply(this);
-    
-    this.context = ctx;
-    this.program = _program;
-    this.attributes = _attributes;
-    this.uniforms = _uniforms;
 };

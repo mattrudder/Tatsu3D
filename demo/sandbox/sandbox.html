@@ -5,34 +5,49 @@
         <title>Tatsu WebGL Demo</title>
         <!-- TODO: Minify tatsu.js and associated scripts. -->
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-        <script src="../../lib/glMatrix-0.9.5.min.js"></script>
-        <script src="../../src/Tatsu.js"></script>
-        <script src="../../src/Graphics/Types.js"></script>
-        <script src="../../src/Graphics/Renderer.js"></script>
-        <script src="../../src/Graphics/Material.js"></script>
-        <script src="../../src/Graphics/Model.js"></script>
+        <script src="/lib/glMatrix-0.9.5.min.js"></script>
+        <script src="/lib/webgl-debug.js"></script>
+        <script src="/src/Tatsu.js"></script>
+        <script src="/src/Graphics/Types.js"></script>
+        <script src="/src/Graphics/Renderer.js"></script>
+        <script src="/src/Graphics/Material.js"></script>
+        <script src="/src/Graphics/Model.js"></script>
         
         <script type="text/javascript">
-            var tatsu, material, model,
-                attributes = {
-                    position: {
-                        type: 'v3',
-                        value: vec3.create()
-                    }
-                },
-                uniforms = {
-                    matModelView: {
-                        type: 'm4',
-                        value: mat4.identity(mat4.create())
-                    },
-                    matProj: {
-                        type: 'm4',
-                        value: mat4.identity(mat4.create())
-                    }
-                };
+            var tatsu, material, modelTri, modelSquare,
+                matModelView = mat4.identity(mat4.create()),
+                matProj = mat4.perspective(45, 800/600, 0.1, 100.0, mat4.create()), 
+                time = 0, deltaTime = 1 / 60;
 
             function draw() {
+                var zScale = 0;
                 tatsu.clear();
+
+                // initial state
+                time += deltaTime * 2;
+
+                zScale = (Math.sin(time) + 2) * -7;
+
+                mat4.identity(matModelView);
+                mat4.translate(matModelView, [-1.5, 0.0, zScale]);
+
+                // Bind materials and uniforms
+                material.bind();
+                material.bindUniform('matModelView', matModelView);
+                material.bindUniform('matProj', matProj);
+
+                // Bind model and attributes
+                // Draw triangle
+                modelTri.bind(material);
+                modelTri.draw();
+
+                // update model-view
+                mat4.translate(matModelView, [3.0, 0.0, 0.0]);
+                material.bindUniform('matModelView', matModelView);
+
+                // TODO: draw square
+                modelSquare.bind(material);
+                modelSquare.draw();
             }
 
             function doFrame() {
@@ -41,23 +56,13 @@
             }
 
             function tatsuLoad() {
-                var fragShader, vertShader;
-                var foo = $.get('sandbox.fs', function(data) {
-                    fragShader = data;
-                });
-                $.get('sandbox.vs', function(data) {
-                    vertShader = data;
-                });
-
                 tatsu = new Tatsu.Renderer({
                     element: 'tatsu-canvas',
                     clearColor: [0.392156862745098, 0.5843137254901961, 0.9294117647058824, 1.0]
                 });
                 material = new Tatsu.Material(tatsu, {
-                    fragmentUrl: 'sandbox.fs',
-                    vertexUrl: 'sandbox.vs',
-                    attributes: attributes,
-                    uniforms: uniforms
+                    fragmentUrl: '/demo/sandbox/sandbox.fs',
+                    vertexUrl: '/demo/sandbox/sandbox.vs'
                 });
                 modelTri = new Tatsu.Model(tatsu, {
                     streams: {
@@ -70,11 +75,11 @@
                                  1.0, -1.0,  0.0
                             ]
                         }
+                    },
+                    faces: {
+                        type: 'uint16',
+                        data: [0, 1, 2]
                     }
-                    // faces: {
-                    //     type: 'uint16',
-                    //     data: []
-                    // }
                 });
                 modelSquare = new Tatsu.Model(tatsu, {
                     streams: {
@@ -88,15 +93,25 @@
                                 -1.0, -1.0,  0.0
                             ]
                         }
+                    },
+                    faces: {
+                        type: 'uint16',
+                        data: [0, 1, 2, 1, 3, 2]
                     }
                 });
 
 
                 doFrame();
             }
+
+            $(function() {
+                var jqCanvas = $('#tatsu-canvas');
+
+                matProj = mat4.perspective(45, jqCanvas.width()/jqCanvas.height(), 0.1, 100.0, mat4.create());
+            })
         </script>
     </head>
     <body onload="tatsuLoad();">
-        <canvas id="tatsu-canvas" style="border: none;" width="800" height="600"></canvas>
+        <canvas id="tatsu-canvas" style="border: none;" width="1440" height="672"></canvas>
     </body>
 </html>

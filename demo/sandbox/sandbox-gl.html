@@ -28,6 +28,33 @@
         <script type="text/javascript">
         
             var gl;
+
+            (function() {
+                var lastTime = 0;
+                var vendors = ['ms', 'moz', 'webkit', 'o'];
+                for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+                    window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+                    window.cancelAnimationFrame = 
+                      window[vendors[x]+'CancelAnimationFrame'] || window[vendors[x]+'CancelRequestAnimationFrame'];
+                }
+
+                if (!window.requestAnimationFrame) {
+                    window.requestAnimationFrame = function(callback, element) {
+                        var currTime = new Date().getTime();
+                        var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+                        var id = window.setTimeout(function() { callback(currTime + timeToCall); }, 
+                          timeToCall);
+                        lastTime = currTime + timeToCall;
+                        return id;
+                    };
+                }
+
+                if (!window.cancelAnimationFrame) {
+                    window.cancelAnimationFrame = function(id) {
+                        clearTimeout(id);
+                    };
+                }
+            }());
             
             function initGL(canvas) {
                 try {
@@ -136,6 +163,11 @@
                 squareVertexPositionBuffer.numItems = 4;
             }
 
+            function doFrame() {
+                requestAnimationFrame(doFrame);
+                drawScene();
+            }
+
             function drawScene() {
                 gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
                 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -167,7 +199,7 @@
                 gl.clearColor(0.0, 0.0, 0.0, 1.0);
                 gl.enable(gl.DEPTH_TEST);
                 
-                drawScene();
+                doFrame();
             }
         </script>
     </head>
