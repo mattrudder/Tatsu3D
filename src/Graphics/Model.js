@@ -29,17 +29,46 @@ Tatsu.Model = function(ctx, options) {
         for (var i = 0; i < this.streamNames.length; i++) {
             streamName = this.streamNames[i];
             attribute = attributes[streamName];
-            streamOffset = this.streamBufferOffsets[streamName];
-            streamStride = this.streamBufferStrides[streamName];
-            streamType = this.streamBufferTypes[streamName];
 
-            _gl.vertexAttribPointer(attribute, streamStride, streamType, false, 0, streamOffset);
-            _gl.enableVertexAttribArray(attribute);
+            if (attribute !== undefined) {
+                streamOffset = this.streamBufferOffsets[streamName];
+                streamStride = this.streamBufferStrides[streamName];
+                streamType = this.streamBufferTypes[streamName];
+
+                _gl.vertexAttribPointer(attribute, streamStride, streamType, false, 0, streamOffset);
+                _gl.enableVertexAttribArray(attribute);
+            }
         }
 
         if (this.indexBuffer) {
             _gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
         }
+    };
+
+    this.unbind = function (material) {
+        var attributes = material.attributeLocations, streamName, attribute;
+
+        if (this.indexBuffer) {
+            _gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, null);
+        }
+
+        for (var i = 0; i < this.streamNames.length; i++) {
+            streamName = this.streamNames[i];
+            attribute = attributes[streamName];
+
+            if (attribute !== undefined)
+                _gl.disableVertexAttribArray(attribute);
+        }
+    };
+
+    this.bindScope = function (material, callback) {
+        this.bind(material);
+
+        if (typeof callback === 'function') {
+            callback.apply(this, [material]);
+        }
+
+        this.unbind(material);
     };
 
     this.draw = function() {
@@ -105,7 +134,9 @@ Tatsu.Model = function(ctx, options) {
     }
 
     if (typeof _options.modelUrl === 'string') {
-        $.get(_options.modelUrl, function (src) { loadModel.apply(_self, [src]); }, 'json');
+        $.get(_options.modelUrl, function (src) {
+            loadModel.apply(_self, [src]);
+        }, 'json');
     }
     else if (typeof _options.streams === 'object') {
         var defaultStream = {

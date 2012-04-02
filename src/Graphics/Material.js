@@ -21,6 +21,22 @@ Tatsu.Material = function(ctx, options) {
         }
     };
 
+    this.unbind = function() {
+        if (_linked) {
+            _gl.useProgram(null);
+        }
+    };
+
+    this.bindScope = function(callback) {
+        this.bind();
+
+        if (typeof callback === 'function') {
+            callback.apply(this);
+        }
+
+        this.unbind();
+    }
+
     this.bindUniform = function(name, value) {
         var uniformType = this.uniformTypes[name];
 
