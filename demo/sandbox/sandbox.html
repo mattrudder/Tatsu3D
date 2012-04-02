@@ -4,7 +4,7 @@
     <head>
         <title>Tatsu WebGL Demo</title>
         <!-- TODO: Minify tatsu.js and associated scripts. -->
-        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+        <script src="/lib/jquery-1.7.2.js"></script>
         <script src="/lib/glMatrix-0.9.5.min.js"></script>
         <script src="/lib/webgl-debug.js"></script>
         <script src="/src/Tatsu.js"></script>
@@ -14,7 +14,7 @@
         <script src="/src/Graphics/Model.js"></script>
         
         <script type="text/javascript">
-            var tatsu, material, modelTri, modelSquare,
+            var tatsu, material, redMaterial, modelTri, modelSquare,
                 matModelView = mat4.identity(mat4.create()),
                 matProj = mat4.perspective(45, 800/600, 0.1, 100.0, mat4.create()), 
                 time = 0, deltaTime = 1 / 60;
@@ -35,6 +35,9 @@
                 material.bind();
                 material.bindUniform('matModelView', matModelView);
                 material.bindUniform('matProj', matProj);
+                material.bindUniform('color', [0, 1, 0]);
+                material.bindUniform('alpha', 1);
+
 
                 // Bind model and attributes
                 // Draw triangle
@@ -44,9 +47,18 @@
                 // update model-view
                 mat4.translate(matModelView, [3.0, 0.0, 0.0]);
                 material.bindUniform('matModelView', matModelView);
+                material.bindUniform('color', [0, 0, 1]);
+                material.bindUniform('alpha', 0.5);
 
                 // TODO: draw square
                 modelSquare.bind(material);
+                modelSquare.draw();
+
+                // second material
+                mat4.translate(matModelView, [3.0, 0.0, 0.0]);
+                redMaterial.bind();
+                redMaterial.bindUniform('matModelView', matModelView);
+                redMaterial.bindUniform('matProj', matProj);
                 modelSquare.draw();
             }
 
@@ -62,6 +74,10 @@
                 });
                 material = new Tatsu.Material(tatsu, {
                     fragmentUrl: '/demo/sandbox/sandbox.fs',
+                    vertexUrl: '/demo/sandbox/sandbox.vs'
+                });
+                redMaterial = new Tatsu.Material(tatsu, {
+                    fragmentUrl: '/demo/sandbox/sandbox-red.fs',
                     vertexUrl: '/demo/sandbox/sandbox.vs'
                 });
                 modelTri = new Tatsu.Model(tatsu, {
