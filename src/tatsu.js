@@ -9,6 +9,17 @@ var Tatsu = Tatsu || { Version: '0.1' };
         window.Float32Array = Array;
     }
 
+    Tatsu.getType = function(obj) {
+        if (obj && obj.constructor && obj.constructor.toString) {
+            var arr = obj.constructor.toString().match(/function\s*(\w+)/);
+            if (arr && arr.length === 2){
+                return arr[1]
+            }
+        }
+
+        return undefined;
+    }
+
     // requestAnimationFrame polyfill
     // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
     // http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating

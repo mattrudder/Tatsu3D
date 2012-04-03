@@ -14,10 +14,12 @@ Tatsu.Material = function(ctx, options) {
     this.attributeLocations = {};
     this.uniformTypes = {};
     this.uniformLocations = {};
+    this.boundTextureCount = 0;
 
     this.bind = function() {
         if (_linked) {
             _gl.useProgram(this.program);
+            this.boundTextureCount = 0;
         }
     };
 
@@ -35,6 +37,24 @@ Tatsu.Material = function(ctx, options) {
         }
 
         this.unbind();
+    }
+
+    function trySetSampler(name, value, type) {
+        var glType = _gl[type],
+            uniform = this.uniformLocations[name];
+
+        _gl.activeTexture(_gl['TEXTURE' + this.boundTextureCount]); 
+
+        if (value instanceof Tatsu.Texture) {
+            _gl.bindTexture(glType, value.texture);
+        }
+        else {
+            _gl.bindTexture(glType, value);
+        }
+        
+        _gl.uniform1i(uniform, this.boundTextureCount);
+
+        this.boundTextureCount++;
     }
 
     this.bindUniform = function(name, value) {
@@ -112,8 +132,13 @@ Tatsu.Material = function(ctx, options) {
                     checkSize(uniformType, 4, value.length);
                     _gl.uniform4fv(this.uniformLocations[name], value);
                 break;
+                case 'sampler2D':
+                    trySetSampler.apply(_self, [name, value, 'TEXTURE_2D']);
+                break;
+                case 'samplerCube':
+                    trySetSampler.apply(_self, [name, value, 'TEXTURE_CUBE_MAP']);
+                break;
                 default:
-                // TODO: Support texture types.
                 console.error('uniform type "' + uniformType + '" not supported!');
                 break;
             }

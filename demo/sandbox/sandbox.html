@@ -12,9 +12,12 @@
         <script src="/src/Graphics/Renderer.js"></script>
         <script src="/src/Graphics/Material.js"></script>
         <script src="/src/Graphics/Model.js"></script>
+        <script src="/src/Graphics/Texture.js"></script>
         
         <script type="text/javascript">
-            var tatsu, material, redMaterial, modelTri, modelSquare, modelTeapot,
+            var tatsu, material, redMaterial,
+                textureHello,
+                modelTri, modelSquare, modelTeapot,
                 matModelView = mat4.identity(mat4.create()),
                 matProj = mat4.perspective(45, 800/600, 0.1, 100.0, mat4.create()), 
                 time = 0, deltaTime = 1 / 60;
@@ -47,6 +50,7 @@
                     mat4.translate(matModelView, [3.0, 0.0, 0.0]);
                     this.bindUniform('matModelView', matModelView);
                     this.bindUniform('color', [0, 0, 1]);
+                    this.bindUniform('helloSampler', textureHello);
 
                     // TODO: draw square
                     modelSquare.bindScope(material, function () {
@@ -112,6 +116,15 @@
                                 -1.0, -1.0,  0.0,
                                  1.0, -1.0,  0.0
                             ]
+                        },
+                        texcoord: {
+                            type: 'float',
+                            stride: 2,
+                            data: [
+                                0.5, 1.0,
+                                0.0, 0.0,
+                                1.0, 0.0
+                            ]
                         }
                     },
                     faces: {
@@ -130,6 +143,16 @@
                                  1.0, -1.0,  0.0,
                                 -1.0, -1.0,  0.0
                             ]
+                        },
+                        texcoord: {
+                            type: 'float',
+                            stride: 2,
+                            data: [
+                                1.0, 1.0,
+                                0.0, 1.0,
+                                1.0, 0.0,
+                                0.0, 0.0
+                            ]
                         }
                     },
                     faces: {
@@ -139,6 +162,9 @@
                 });
                 modelTeapot = new Tatsu.Model(tatsu, {
                     modelUrl: '/demo/sandbox/teapot.json'
+                });
+                textureHello = new Tatsu.Texture(tatsu, {
+                    textureUrl: '/demo/sandbox/hello.png'
                 })
 
 
@@ -149,10 +175,12 @@
                 var jqCanvas = $('#tatsu-canvas');
 
                 matProj = mat4.perspective(45, jqCanvas.width()/jqCanvas.height(), 0.1, 100.0, mat4.create());
+
+                tatsuLoad();
             })
         </script>
     </head>
-    <body onload="tatsuLoad();">
+    <body>
         <canvas id="tatsu-canvas" style="border: none;" width="1440" height="672"></canvas>
     </body>
 </html>
