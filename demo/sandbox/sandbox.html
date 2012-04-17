@@ -69,15 +69,9 @@
                         x += leftStick[0] * 0.5;
                         y -= leftStick[1] * 0.5;
 
-                        if (rightStick[0] > 0 || rightStick[1] > 0) {
-                            var rsMag = Math.sqrt(rightStick[0] * rightStick[0] + rightStick[1] * rightStick[1]);
-                            var rsMagX = rightStick[0] / rsMag;
-                            var rsMagY = rightStick[1] / rsMag;
-                            var idX = 1;
-                            var idY = 0;
-
-                            rot = Math.atan2(rsMagY, rsMagX);
-                        }
+                        
+                        rot = Math.atan2(-rightStick[1], rightStick[0]);
+                        
 
                         zScale = leftTrigger[0];
                     }
