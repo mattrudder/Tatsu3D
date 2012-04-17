@@ -7,6 +7,7 @@
         <script src="/lib/jquery-1.7.2.js"></script>
         <script src="/lib/glMatrix-0.9.5.min.js"></script>
         <script src="/lib/webgl-debug.js"></script>
+        <script src="gamepad.js"></script>
         <script src="/src/Tatsu.js"></script>
         <script src="/src/Graphics/Types.js"></script>
         <script src="/src/Graphics/Renderer.js"></script>
@@ -20,21 +21,80 @@
                 modelTri, modelSquare, modelTeapot,
                 matModelView = mat4.identity(mat4.create()),
                 matProj = mat4.perspective(45, 800/600, 0.1, 100.0, mat4.create()), 
-                time = 0, deltaTime = 1 / 60;
+                time = 0, deltaTime = 1 / 60,
+                stickX = 0, stickY = 0, mag = 0
+                x = 0, y = 0, rot = 0,
+                gamepadStates = null;
+
+            function filterDeadZoneInputs(dz, inputs) {
+                var mag = 0,
+                    isDead = false,
+                    norm;
+
+                if (!(inputs instanceof Array))
+                    inputs = [inputs];
+
+                mag = inputs.length == 2
+                    ? Math.sqrt(inputs[0] * inputs[0] + inputs[1] * inputs[1])
+                    : Math.sqrt(inputs[0] * inputs[0]);
+                isDead = mag <= dz;
+
+                for (var i = 0; i < inputs.length; i++) {
+                    if (isDead)
+                        inputs[i] = 0;
+                };
+
+                return inputs;
+            }
 
             function draw() {
-                var zScale = 0;
+                var zScale = 0,
+                    gp = null,
+                    leftStick = [0, 0],
+                    rightStick = [0, 0],
+                    leftTrigger = 0,
+                    rightTrigger = 0;
+
+                if (Gamepad.supported) {
+                    gp = Gamepad.getStates();
+
+                    if (gp && gp[0]) {
+                        gp = gp[0];
+
+                        leftStick = filterDeadZoneInputs(gp.deadZoneLeftStick, [gp.leftStickX, gp.leftStickY]);
+                        rightStick = filterDeadZoneInputs(gp.deadZoneRightStick, [gp.rightStickX, gp.rightStickY]);
+                        leftTrigger = filterDeadZoneInputs(gp.deadZoneShoulder1, [gp.leftShoulder1]);
+                        rightTrigger = filterDeadZoneInputs(gp.deadZoneShoulder1, [gp.rightShoulder1]);
+
+                        x += leftStick[0] * 0.5;
+                        y -= leftStick[1] * 0.5;
+
+                        if (rightStick[0] > 0 || rightStick[1] > 0) {
+                            var rsMag = Math.sqrt(rightStick[0] * rightStick[0] + rightStick[1] * rightStick[1]);
+                            var rsMagX = rightStick[0] / rsMag;
+                            var rsMagY = rightStick[1] / rsMag;
+                            var idX = 1;
+                            var idY = 0;
+
+                            rot = Math.atan2(rsMagY, rsMagX);
+                        }
+
+                        zScale = leftTrigger[0];
+                    }
+                }
+
                 tatsu.clear();
 
                 // initial state
-                time += deltaTime * 2;
+                //time += deltaTime * 2;
 
-                zScale = (Math.sin(time) + 2) * -7;
+                zScale = (leftTrigger[0] + 2) * -7 + (rightTrigger[0] * 7);
 
                 // Bind materials and uniforms
                 material.bindScope(function () {
                     mat4.identity(matModelView);
-                    mat4.translate(matModelView, [-1.5, 0.0, zScale]);
+                    mat4.translate(matModelView, [x, y, zScale]);
+                    mat4.rotate(matModelView, rot, [0, 0, 1]);
 
                     this.bindUniform('matModelView', matModelView);
                     this.bindUniform('matProj', matProj);
