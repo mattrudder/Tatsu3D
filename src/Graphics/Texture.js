@@ -11,6 +11,8 @@ Tatsu.Texture = function(ctx, options) {
     this.context = ctx;
     this.texture = _gl.createTexture();
     this.type = _textureType;
+	this.width = 0;
+	this.height = 0;
 
     this.bind = function() {
     	_gl.bindTexture(_textureType, this.texture);
@@ -31,6 +33,9 @@ Tatsu.Texture = function(ctx, options) {
     }
 
     function onImageLoaded(image, type) {
+	    this.width = image.width;
+	    this.height = image.height;
+
     	_gl.bindTexture(_textureType, this.texture);
 
     	// TODO: Support glPixelStore properly via options

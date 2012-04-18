@@ -91,14 +91,14 @@ Tatsu.Model = function(ctx, options) {
         for (streamName in source.streams) {
             stream = source.streams[streamName];
 
-            streamBuffer = Tatsu.Types.toGLArray(_gl, stream.type, stream.data);
+            streamBuffer = Tatsu.Graphics.toGLArray(_gl, stream.type, stream.data);
 
             this.streamNames[i] = streamName;
             this.streamBuffers[i] = streamBuffer;
             this.streamBufferOffsets[streamName] = bufferSize;
             this.streamBufferStrides[streamName] = stream.stride;
-            this.streamBufferTypes[streamName] = Tatsu.Types.toGLType(_gl, stream.type);
-            this.vertexCount = stream.data.length / stream.stride;            
+            this.streamBufferTypes[streamName] = Tatsu.Graphics.toGLType(_gl, stream.type);
+            this.vertexCount = stream.data.length / stream.stride;
 
             if (streamBuffer) {
                 bufferSize += streamBuffer.byteLength;
@@ -124,8 +124,8 @@ Tatsu.Model = function(ctx, options) {
 
         if (source.faces) {
             this.indexBuffer = _gl.createBuffer();
-            this.indexStreamBuffer = Tatsu.Types.toGLArray(_gl, source.faces.type, source.faces.data);
-            this.indexStreamType = Tatsu.Types.toGLType(_gl, source.faces.type);
+            this.indexStreamBuffer = Tatsu.Graphics.toGLArray(_gl, source.faces.type, source.faces.data);
+            this.indexStreamType = Tatsu.Graphics.toGLType(_gl, source.faces.type);
             this.indexCount = source.faces.data.length;
 
             _gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);

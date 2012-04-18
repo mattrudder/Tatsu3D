@@ -161,38 +161,24 @@ Tatsu.Material = function(ctx, options) {
     // Lookup attributes and uniforms in source by searching directly in the shader.
     // http://altdevblogaday.com/2011/04/18/mike_acton-pokes-around-webgl-and-jquery/
     function lookupAttributes(src) {
-        var attributeMatch = /attribute\s+(\w+)\s+(\w+)\s*;/g,
-            attributes = src.match(attributeMatch),
-            attribute = null,
-            attributeType = null,
-            attributeName = null;
-
-        for (var i = attributes.length - 1; i >= 0; i--) {
-            attribute = attributes[i].split(attributeMatch);
-            attributeType = attribute[1];
-            attributeName = attribute[2];
+	    var lookup = Tatsu.Graphics.lookupAttributes(src);
+        for (var i = lookup.names.length - 1; i >= 0; i--) {
+	        attributeName = lookup.names[i];
+            attributeType = lookup.types[attributeName];
 
             this.attributes.push(attributeName);
             this.attributeTypes[attributeName] = attributeType;
-        };
+        }
     }
 
     function lookupUniforms(src) {
-        var uniformMatch = /uniform\s+(\w+)\s+(\w+)\s*;/g,
-            uniforms = src.match(uniformMatch),
-            uniform = null,
-            uniformType = null,
-            uniformName = null;
+	    var lookup = Tatsu.Graphics.lookupUniforms(src);
+        for (var i = lookup.names.length - 1; i >= 0; i--) {
+            uniformName = lookup.names[i];
+            uniformType = lookup.types[uniformName];
 
-        if (uniforms !== null) {
-            for (var i = uniforms.length - 1; i >= 0; i--) {
-                uniform = uniforms[i].split(uniformMatch);
-                uniformType = uniform[1];
-                uniformName = uniform[2];
-
-                this.uniforms.push(uniformName);
-                this.uniformTypes[uniformName] = uniformType;
-            };
+            this.uniforms.push(uniformName);
+            this.uniformTypes[uniformName] = uniformType;
         }
     }
 
@@ -229,20 +215,20 @@ Tatsu.Material = function(ctx, options) {
     }
 
     // object construction
-    if (options.vertex) {
-        addShader(options.vertex, _gl.VERTEX_SHADER);
+    if (options.vertexShader) {
+        addShader(options.vertexShader, _gl.VERTEX_SHADER);
     }
-    else if (options.vertexUrl) {
-        $.get(options.vertexUrl, function (data, status, xhr) {
+    else if (options.vertexShaderUrl) {
+        $.get(options.vertexShaderUrl, function (data, status, xhr) {
             addShader.apply(_self, [xhr.responseText, _gl.VERTEX_SHADER]);
         });
     }
 
-    if (options.fragment) {
-        addShader(options.fragment, _gl.FRAGMENT_SHADER);
+    if (options.fragmentShader) {
+        addShader(options.fragmentShader, _gl.FRAGMENT_SHADER);
     }
-    else if (options.fragmentUrl) {
-        $.get(options.fragmentUrl, function (data, status, xhr) {
+    else if (options.fragmentShaderUrl) {
+        $.get(options.fragmentShaderUrl, function (data, status, xhr) {
             addShader.apply(_self, [xhr.responseText, _gl.FRAGMENT_SHADER]);
         });
     }

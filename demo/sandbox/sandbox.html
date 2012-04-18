@@ -9,7 +9,7 @@
         <script src="/lib/webgl-debug.js"></script>
         <script src="gamepad.js"></script>
         <script src="/src/Tatsu.js"></script>
-        <script src="/src/Graphics/Types.js"></script>
+        <script src="/src/Graphics/Utility.js"></script>
         <script src="/src/Graphics/Renderer.js"></script>
         <script src="/src/Graphics/Material.js"></script>
         <script src="/src/Graphics/Model.js"></script>
@@ -22,13 +22,12 @@
                 matModelView = mat4.identity(mat4.create()),
                 matProj = mat4.perspective(45, 800/600, 0.1, 100.0, mat4.create()), 
                 time = 0, deltaTime = 1 / 60,
-                stickX = 0, stickY = 0, mag = 0
                 x = 0, y = 0, rot = 0,
                 gamepadStates = null;
 
             function filterDeadZoneInputs(dz, inputs) {
-                var mag = 0,
-                    isDead = false,
+                var mag,
+                    isDead,
                     norm;
 
                 if (!(inputs instanceof Array))
@@ -42,7 +41,7 @@
                 for (var i = 0; i < inputs.length; i++) {
                     if (isDead)
                         inputs[i] = 0;
-                };
+                }
 
                 return inputs;
             }
@@ -52,8 +51,8 @@
                     gp = null,
                     leftStick = [0, 0],
                     rightStick = [0, 0],
-                    leftTrigger = 0,
-                    rightTrigger = 0;
+                    leftTrigger = [0],
+                    rightTrigger = [0];
 
                 if (Gamepad.supported) {
                     gp = Gamepad.getStates();
@@ -68,19 +67,15 @@
 
                         x += leftStick[0] * 0.5;
                         y -= leftStick[1] * 0.5;
-
                         
                         rot = Math.atan2(-rightStick[1], rightStick[0]);
-                        
-
-                        zScale = leftTrigger[0];
                     }
                 }
 
                 tatsu.clear();
 
                 // initial state
-                //time += deltaTime * 2;
+                time += deltaTime * 2;
 
                 zScale = (leftTrigger[0] + 2) * -7 + (rightTrigger[0] * 7);
 
@@ -153,12 +148,12 @@
                     clearColor: [0.392156862745098, 0.5843137254901961, 0.9294117647058824, 1.0]
                 });
                 material = new Tatsu.Material(tatsu, {
-                    fragmentUrl: '/demo/sandbox/sandbox.fs',
-                    vertexUrl: '/demo/sandbox/sandbox.vs'
+                    fragmentShaderUrl: '/demo/sandbox/sandbox.fs',
+                    vertexShaderUrl: '/demo/sandbox/sandbox.vs'
                 });
                 redMaterial = new Tatsu.Material(tatsu, {
-                    fragmentUrl: '/demo/sandbox/sandbox-red.fs',
-                    vertexUrl: '/demo/sandbox/sandbox.vs'
+                    fragmentShaderUrl: '/demo/sandbox/sandbox-red.fs',
+                    vertexShaderUrl: '/demo/sandbox/sandbox.vs'
                 });
                 modelTri = new Tatsu.Model(tatsu, {
                     streams: {
