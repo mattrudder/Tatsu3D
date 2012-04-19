@@ -216,7 +216,7 @@ Tatsu.Material = function(ctx, options) {
 
     // object construction
     if (options.vertexShader) {
-        addShader(options.vertexShader, _gl.VERTEX_SHADER);
+        addShader.apply(_self, [options.vertexShader, _gl.VERTEX_SHADER]);
     }
     else if (options.vertexShaderUrl) {
         $.get(options.vertexShaderUrl, function (data, status, xhr) {
@@ -225,7 +225,7 @@ Tatsu.Material = function(ctx, options) {
     }
 
     if (options.fragmentShader) {
-        addShader(options.fragmentShader, _gl.FRAGMENT_SHADER);
+        addShader.apply(_self, [options.fragmentShader, _gl.FRAGMENT_SHADER]);
     }
     else if (options.fragmentShaderUrl) {
         $.get(options.fragmentShaderUrl, function (data, status, xhr) {

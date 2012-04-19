@@ -14,11 +14,13 @@
         <script src="/src/Graphics/Material.js"></script>
         <script src="/src/Graphics/Model.js"></script>
         <script src="/src/Graphics/Texture.js"></script>
+        <script src="/src/Graphics/SpriteBatch.js"></script>
         
         <script type="text/javascript">
             var tatsu, material, redMaterial,
                 textureHello,
                 modelTri, modelSquare, modelTeapot,
+		        spriteBatch,
                 matModelView = mat4.identity(mat4.create()),
                 matProj = mat4.perspective(45, 800/600, 0.1, 100.0, mat4.create()), 
                 time = 0, deltaTime = 1 / 60,
@@ -80,6 +82,7 @@
                 zScale = (leftTrigger[0] + 2) * -7 + (rightTrigger[0] * 7);
 
                 // Bind materials and uniforms
+	            /*
                 material.bindScope(function () {
                     mat4.identity(matModelView);
                     mat4.translate(matModelView, [x, y, zScale]);
@@ -114,7 +117,13 @@
                     //     this.draw();
                     // });
                 });
-                
+                */
+
+	            spriteBatch.start();
+	            spriteBatch.draw({
+		            texture: textureHello
+	            });
+	            spriteBatch.end();
 
                 // update model-view
                 // mat4.translate(matModelView, [3.0, 0.0, 0.0]);
@@ -214,7 +223,9 @@
                 });
                 textureHello = new Tatsu.Texture(tatsu, {
                     textureUrl: '/demo/sandbox/hello.png'
-                })
+                });
+
+	            spriteBatch = new Tatsu.SpriteBatch(tatsu);
 
 
                 doFrame();
