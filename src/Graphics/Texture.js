@@ -13,6 +13,7 @@ Tatsu.Texture = function(ctx, options) {
     this.type = _textureType;
 	this.width = 0;
 	this.height = 0;
+    this.isLoaded = false;
 
     this.bind = function() {
     	_gl.bindTexture(_textureType, this.texture);
@@ -52,9 +53,12 @@ Tatsu.Texture = function(ctx, options) {
     	_gl.bindTexture(_textureType, null);
 
     	_imagesToLoad--;
-    	if (_imagesToLoad === 0 && typeof _options.callback === 'function') {
-    		_options.callback.apply(_self);
-    	}
+    	if (_imagesToLoad === 0) {
+            this.isLoaded = true;
+            if (typeof _options.callback === 'function') {
+                _options.callback.apply(_self);
+            }
+        }
     }
 
     function loadImage(url, type) {

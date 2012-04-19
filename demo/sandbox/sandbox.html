@@ -82,42 +82,42 @@
                 zScale = (leftTrigger[0] + 2) * -7 + (rightTrigger[0] * 7);
 
                 // Bind materials and uniforms
-	            /*
-                material.bindScope(function () {
-                    mat4.identity(matModelView);
-                    mat4.translate(matModelView, [x, y, zScale]);
-                    mat4.rotate(matModelView, rot, [0, 0, 1]);
+	            
+                // material.bindScope(function () {
+                //     mat4.identity(matModelView);
+                //     mat4.translate(matModelView, [x, y, zScale]);
+                //     mat4.rotate(matModelView, rot, [0, 0, 1]);
 
-                    this.bindUniform('matModelView', matModelView);
-                    this.bindUniform('matProj', matProj);
-                    this.bindUniform('color', [0, 1, 0]);
+                //     this.bindUniform('matModelView', matModelView);
+                //     this.bindUniform('matProj', matProj);
+                //     this.bindUniform('color', [0, 1, 0]);
 
-                    // Bind model and attributes
-                    // Draw triangle
-                    modelTri.bindScope(material, function () {
-                        this.draw();
-                    });
+                //     // Bind model and attributes
+                //     // Draw triangle
+                //     modelTri.bindScope(material, function () {
+                //         this.draw();
+                //     });
 
-                    // update model-view
-                    mat4.translate(matModelView, [3.0, 0.0, 0.0]);
-                    this.bindUniform('matModelView', matModelView);
-                    this.bindUniform('color', [0, 0, 1]);
-                    this.bindUniform('helloSampler', textureHello);
+                //     // update model-view
+                //     mat4.translate(matModelView, [3.0, 0.0, 0.0]);
+                //     this.bindUniform('matModelView', matModelView);
+                //     this.bindUniform('color', [0, 0, 1]);
+                //     this.bindUniform('helloSampler', textureHello);
 
-                    // TODO: draw square
-                    modelSquare.bindScope(material, function () {
-                        this.draw();
-                    });
+                //     // TODO: draw square
+                //     modelSquare.bindScope(material, function () {
+                //         this.draw();
+                //     });
 
-                    mat4.translate(matModelView, [-6.0, 0.0, 0.0]);
-                    this.bindUniform('matModelView', matModelView);
-                    this.bindUniform('color', [1, 0, 0]);
+                //     mat4.translate(matModelView, [-6.0, 0.0, 0.0]);
+                //     this.bindUniform('matModelView', matModelView);
+                //     this.bindUniform('color', [1, 0, 0]);
 
-                    // modelTeapot.bindScope(material, function () {
-                    //     this.draw();
-                    // });
-                });
-                */
+                //     // modelTeapot.bindScope(material, function () {
+                //     //     this.draw();
+                //     // });
+                // });
+                
 
 	            spriteBatch.start();
 	            spriteBatch.draw({
@@ -222,7 +222,7 @@
                     modelUrl: '/demo/sandbox/teapot.json'
                 });
                 textureHello = new Tatsu.Texture(tatsu, {
-                    textureUrl: '/demo/sandbox/hello.png'
+                    textureUrl: '/demo/sandbox/tile_06.png'
                 });
 
 	            spriteBatch = new Tatsu.SpriteBatch(tatsu);

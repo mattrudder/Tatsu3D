@@ -1,9 +1,11 @@
 
 Tatsu.SpriteBatch = function(ctx, options) {
     // private members
-    var _gl = ctx.gl(),
+    var _ctx = ctx,
+    	_gl = ctx.gl(),
         _self = this,
         _options = options || {},
+        _streamBufferNames = ['position', 'texcoord', 'color'],
 	    _streamBuffers = [], // position, texcoord, color
 	    _streamBufferStrides = [3, 2, 4],
 	    _attributes = {},
@@ -14,21 +16,65 @@ Tatsu.SpriteBatch = function(ctx, options) {
 	    _verticesPerSprite = 4,
 	    _indiciesPerSprite = 6,
 	    _vertexSize = 10,
-	    _defaultVertices = null,
-	    _defaultTexcoords = null,
-	    _defaultColors = null,
-	    _defaultMaterial = null;
+	    _defaultMaterial = null,
+		_defaultVertices = [
+			0, 0,
+			1, 0,
+			0, 1,
+			1, 1
+		],
+		_defaultTexcoords = [
+			0, 0,
+			1, 0,
+			0, 1,
+			1, 1
+		],
+		_defaultColor = [1, 1, 1, 1];
 
 	function renderSprite(sprite, index) {
-		var positions = _streamBuffers[0],
+		var index = 0,
+			offset = 0,
+			position = null,
+			texcoord = null,
+			positions = _streamBuffers[0],
 			texcoords = _streamBuffers[1],
 			colors = _streamBuffers[2],
-			vertexOffset = index * _verticesPerSprite;
+			positionStride = _streamBufferStrides[0],
+			texcoordStride = _streamBufferStrides[1],
+			colorStride = _streamBufferStrides[2],
+			vertexOffset = index * _verticesPerSprite,
+			color = sprite.color || _defaultColor,
+			origin = sprite.origin || [0.5, 0.5, 1, 1],
+			destination = sprite.destination || [0, 0, 1, 1],
+			rotation = sprite.rotation || 0,
+			transform = mat4.rotateZ(mat4.identity(mat4.create()), rotation);
 
 		// TODO: Rotation, scale;
-		positions.set(_defaultVertices, vertexOffset * _streamBufferStrides[0]);
-		texcoords.set(_defaultTexcoords, vertexOffset * _streamBufferStrides[1]);
-		colors.set(_defaultColors, vertexOffset * _streamBufferStrides[2]);
+		offset = vertexOffset * positionStride;
+		for (index = 0; index < _verticesPerSprite; ++index) {
+			position = vec3.create([
+				(_defaultVertices[index * 2] - origin[0]) * destination[2],
+				(_defaultVertices[index * 2 + 1] - origin[1]) * destination[3],
+				0]); // depth?
+			mat4.multiplyVec3(transform, position);
+
+			positions.set(position, offset);
+			offset += positionStride;
+		}
+
+		offset = vertexOffset * texcoordStride;
+		for (index = 0; index < _verticesPerSprite; ++index) {
+			texcoord = [_defaultTexcoords[offset], _defaultTexcoords[offset + 1]];
+			texcoords.set(texcoord, offset);
+			offset += texcoordStride;
+		}
+
+		// vertex color
+		offset = vertexOffset * colorStride;
+		for (index = 0; index < _verticesPerSprite; ++index) {
+			colors.set(color, vertexOffset * colorStride);
+			offset += colorStride;
+		}
 	}
 
 	function renderBatch(material, texture, startIndex, endIndex) {
@@ -40,6 +86,9 @@ Tatsu.SpriteBatch = function(ctx, options) {
 			attributeName,
 			attributeLocation,
 			sizeInBytes = 0;
+
+		if (!texture.isLoaded)
+			return;
 
 		_streamBuffers.length = 0;
 
@@ -58,27 +107,30 @@ Tatsu.SpriteBatch = function(ctx, options) {
 		_gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, _indexBuffer);
 
 		// Copy data to array buffer.
+		var names 
 		for (index = 0; index < _streamBuffers.length; ++index) {
 			array = _streamBuffers[index];
 			_gl.bufferSubData(_gl.ARRAY_BUFFER, sizeInBytes, array);
-			sizeInBytes += array.byteLength;
 
 			// TODO: Custom attribute mapping for custom materials?
-			attributeName = _attributes.names[index];
+			attributeName = _streamBufferNames[index];
 			attributeLocation = material.attributeLocations[attributeName];
 			_gl.vertexAttribPointer(attributeLocation, _streamBufferStrides[index], _gl.FLOAT, false, 0, sizeInBytes);
 			_gl.enableVertexAttribArray(attributeLocation);
+
+			sizeInBytes += array.byteLength;
 		}
 
 		material.bindScope(function (){
-			var xScale = 2 / 800;
-			var yScale = 2 / 600;
+			var xScale = 2 / _ctx.width();
+			var yScale = 2 / _ctx.height();
 			var matTransform = mat4.create([
-				xScale, 0, 0, 0,
-				0, -yScale, 0, 0,
-				0, 0, 1, 0,
-				-1, 1, 0, 1]);
-
+				xScale, 0, 0, _ctx.width(),
+				0, yScale, 0, _ctx.height(),
+				0, 0, -2/100, -100,
+				0, 0, 0, 1]);
+		//	matTransform = mat4.ortho(0, _ctx.width(), _ctx.height(), 0, 0.1, 1000)
+			var matTransform = mat4.identity(mat4.create());
 
 			this.bindUniform('matTransform', matTransform);
 			this.bindUniform('spriteSampler', texture);
@@ -101,13 +153,13 @@ Tatsu.SpriteBatch = function(ctx, options) {
 			indexArray = new Int16Array(_maxBatchSize * _indiciesPerSprite);
 
 		for (var vertex = 0; vertex < _maxBatchSize * _verticesPerSprite; vertex += _verticesPerSprite) {
-			indexArray[index++] = vertex + 1;
 			indexArray[index++] = vertex;
+			indexArray[index++] = vertex + 1;
 			indexArray[index++] = vertex + 2;
 
-			indexArray[index++] = vertex + 2;
-			indexArray[index++] = vertex + 3;
 			indexArray[index++] = vertex + 1;
+			indexArray[index++] = vertex + 3;
+			indexArray[index++] = vertex + 2;
 		}
 
 		_indexBuffer = _gl.createBuffer();
@@ -182,27 +234,6 @@ Tatsu.SpriteBatch = function(ctx, options) {
 
 	createVertexArrayBuffer();
 	createElementArrayBuffer();
-
-	_defaultVertices = new Float32Array([
-		0, 0, 0,
-		1, 0, 0,
-		0, 1, 0,
-		1, 1, 0
-	]);
-
-	_defaultTexcoords = new Float32Array([
-		0, 0,
-		1, 0,
-		0, 1,
-		1, 1
-	]);
-
-	_defaultColors = new Float32Array([
-		1, 1, 1, 1,
-		1, 1, 1, 1,
-		1, 1, 1, 1,
-		1, 1, 1, 1
-	]);
 
 	_vsSource =
 		'attribute vec3 position;\n' +
