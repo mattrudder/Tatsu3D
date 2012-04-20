@@ -9,16 +9,18 @@ var Tatsu = Tatsu || { Version: '0.1' };
         window.Float32Array = Array;
     }
 
-    Tatsu.getType = function(obj) {
-        if (obj && obj.constructor && obj.constructor.toString) {
-            var arr = obj.constructor.toString().match(/function\s*(\w+)/);
-            if (arr && arr.length === 2){
-                return arr[1]
-            }
-        }
+    // NOTE: Doesn't work with our method of code structure.
+    //       Either need a new method, or a new way of identifying object instances.
+    // Tatsu.getType = function(obj) {
+    //     if (obj && obj.constructor && obj.constructor.toString) {
+    //         var arr = obj.constructor.toString().match(/function\s*(\w+)/);
+    //         if (arr && arr.length === 2){
+    //             return arr[1]
+    //         }
+    //     }
 
-        return undefined;
-    }
+    //     return undefined;
+    // };
 
     // requestAnimationFrame polyfill
     // http://paulirish.com/2011/requestanimationframe-for-smart-animating/

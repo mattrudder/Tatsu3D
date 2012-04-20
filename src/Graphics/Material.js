@@ -30,13 +30,13 @@ Tatsu.Material = function(ctx, options) {
     };
 
     this.bindScope = function(callback) {
-        this.bind();
+        _self.bind();
 
         if (typeof callback === 'function') {
-            callback.apply(this);
+            callback.apply(_self);
         }
 
-        this.unbind();
+        _self.unbind();
     }
 
     function trySetSampler(name, value, type) {
@@ -46,7 +46,7 @@ Tatsu.Material = function(ctx, options) {
         _gl.activeTexture(_gl['TEXTURE' + this.boundTextureCount]); 
 
         if (value instanceof Tatsu.Texture) {
-            _gl.bindTexture(glType, value.texture);
+            _gl.bindTexture(glType, value.texture());
         }
         else {
             _gl.bindTexture(glType, value);

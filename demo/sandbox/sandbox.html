@@ -18,14 +18,15 @@
         
         <script type="text/javascript">
             var tatsu, material, redMaterial,
-                textureHello,
+                textureHello, tileTextures,
                 modelTri, modelSquare, modelTeapot,
 		        spriteBatch,
                 matModelView = mat4.identity(mat4.create()),
                 matProj = mat4.perspective(45, 800/600, 0.1, 100.0, mat4.create()), 
                 time = 0, deltaTime = 1 / 60,
                 x = 0, y = 0, rot = 0,
-                gamepadStates = null;
+                gamepadStates = null,
+                sprites = [];
 
             function filterDeadZoneInputs(dz, inputs) {
                 var mag,
@@ -48,9 +49,21 @@
                 return inputs;
             }
 
+            // Returns a random number between min and max
+            function getRandomFloat(min, max)
+            {
+                return Math.random() * (max - min) + min;
+            }
+
+            function getRandomInt(min, max)
+            {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
             function draw() {
                 var zScale = 0,
                     gp = null,
+                    i = 0,
                     leftStick = [0, 0],
                     rightStick = [0, 0],
                     leftTrigger = [0],
@@ -82,6 +95,10 @@
                 zScale = (leftTrigger[0] + 2) * -7 + (rightTrigger[0] * 7);
 
                 // Bind materials and uniforms
+
+                var _gl = tatsu.gl();
+                var viewport = _gl.getParameter(_gl.VIEWPORT);
+                //var matProjection = mat4.ortho(viewport[0], viewport[0] + viewport[2], viewport[1] + viewport[3], -1, 1);
 	            
                 // material.bindScope(function () {
                 //     mat4.identity(matModelView);
@@ -120,9 +137,42 @@
                 
 
 	            spriteBatch.start();
-	            spriteBatch.draw({
-		            texture: textureHello
-	            });
+
+                var tmp = 512 / 10,
+                    screenX = tatsu.width(),
+                    screenY = tatsu.height();
+
+                // i = 0;
+                // for (var x = 0; x < screenX; x += 25) {
+                //     for (var y = 0; y < screenY; y += 25) {
+
+                //         spriteBatch.draw({
+                //             texture: tileTextures[i % 3],
+                //             source: [(i * tmp) % 512, (i * tmp) % 512, 50, 50],
+                //             destination: [x, y, 25, 25]
+                //         });    
+
+                //         ++i;
+                //     }
+                // }
+
+                for (i = 0; i < sprites.length; ++i) {
+                    var sprite = sprites[i];
+                    spriteBatch.draw({
+                        texture: sprite.texture,
+                        source: [(i * tmp) % 512, (i * tmp) % 512, 50, 50],
+                        destination: [sprite.x, sprite.y, sprite.width, sprite.height]
+                    });
+
+                    sprite.x += sprite.vx;
+                    sprite.y += sprite.vy;
+
+                    if (sprite.x < 0 || sprite.x + sprite.width > tatsu.width())
+                        sprite.vx *= -1;
+                    if (sprite.y < 0 || sprite.y + sprite.height > tatsu.height())
+                        sprite.vy *= -1;
+                }
+
 	            spriteBatch.end();
 
                 // update model-view
@@ -225,8 +275,31 @@
                     textureUrl: '/demo/sandbox/tile_06.png'
                 });
 
+                tileTextures = [
+                    new Tatsu.Texture(tatsu, {
+                        textureUrl: '/demo/sandbox/tile_05.png'
+                    }),
+                    new Tatsu.Texture(tatsu, {
+                        textureUrl: '/demo/sandbox/tile_06.png'
+                    }),
+                    new Tatsu.Texture(tatsu, {
+                        textureUrl: '/demo/sandbox/tile_07.png'
+                    })
+                ];
+
 	            spriteBatch = new Tatsu.SpriteBatch(tatsu);
 
+                for (var s = 0; s < 1000; ++s) {
+                    sprites[s] = {
+                        texture: tileTextures[getRandomInt(0, 2)],
+                        x: getRandomInt(0, tatsu.width()),
+                        y: getRandomInt(0, tatsu.height()),
+                        vx: getRandomFloat(-2, 2),
+                        vy: getRandomFloat(-2, 2),
+                        width: getRandomFloat(10, 50),
+                        height: getRandomFloat(10, 50),
+                    };
+                }
 
                 doFrame();
             }

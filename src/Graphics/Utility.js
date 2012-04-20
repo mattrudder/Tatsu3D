@@ -1,4 +1,4 @@
-var Tatsu = Tatsu || { };
+
 Tatsu.Graphics = Tatsu.Graphics || { };
 
 (function () {

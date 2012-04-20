@@ -35,8 +35,8 @@ Tatsu.Model = function(ctx, options) {
                 streamStride = this.streamBufferStrides[streamName];
                 streamType = this.streamBufferTypes[streamName];
 
-                _gl.vertexAttribPointer(attribute, streamStride, streamType, false, 0, streamOffset);
                 _gl.enableVertexAttribArray(attribute);
+                _gl.vertexAttribPointer(attribute, streamStride, streamType, false, 0, streamOffset);
             }
         }
 
